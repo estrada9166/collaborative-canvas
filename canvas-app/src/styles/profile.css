@@ -1,0 +1,16 @@
+.profileBody{
+  margin-top: 30px;
+}
+
+.profileList {
+  border: 1px solid rgb(224, 224, 224);
+  margin-top: 34px;
+}
+
+.profileFolders {
+  border-bottom: 1px solid rgb(224, 224, 224);
+}
+
+.joinCanvas{
+  margin-top: 200px;
+}

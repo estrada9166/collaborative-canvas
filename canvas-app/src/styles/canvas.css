@@ -1,0 +1,27 @@
+canvas {
+  border: 2px dotted #A3A3A3;
+}
+
+.orangeColor {
+  background-color: orange;
+  width: 59.47px;
+  height: 34px;
+}
+
+.greenColor {
+  background-color: green;
+  width: 59.47px;
+  height: 34px;
+}
+
+.redColor {
+  background-color: red;
+  width: 59.47px;
+  height: 34px;
+}
+
+.blackColor {
+  background-color: black;
+  width: 59.47px;
+  height: 34px;
+}
