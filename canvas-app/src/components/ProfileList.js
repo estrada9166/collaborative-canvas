@@ -52,7 +52,6 @@ class ProfileList extends Component {
         <List className="profileFolders">
           <ListItem
             leftAvatar={<Avatar>{this.state.firstLetter}</Avatar>}
-            rightIcon={<ActionInfo />}
             primaryText={this.state.userName}
           />
         </List>

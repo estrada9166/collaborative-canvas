@@ -39,23 +39,7 @@ class Header extends Component {
           <Col lg={2} md={2} xs={2} className="headerName">
             <h3>White Board</h3>
           </Col>
-          <Col lg={3} className="headerDescription">
-            <Row>
-              <Col lg={3}>
-                <p>About</p>
-              </Col>
-              <Col lg={3}>
-                <p>Demo</p>
-              </Col>
-              <Col lg={3}>
-                <p>About</p>
-              </Col>
-              <Col lg={3}>
-                <p>About</p>
-              </Col>
-            </Row>
-          </Col>
-          <Col lg={3} lgOffset={2} className="headerLog">
+          <Col lg={3} lgOffset={5} className="headerLog">
             <Row>
               <Col lg={3}>
                 <Button onClick={this.openLogModal} bsStyle="primary">Log In</Button>

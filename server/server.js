@@ -220,7 +220,7 @@ apiRoutes.get('/canvas/:id', function(req, res){
   }, function(err, canvas){
     if(err) throw err;
 
-    if(canvas){
+    if(!canvas){
       res.json({ success: true, canvas: canvas})
     } else{
       res.json({ success: false, message: "The canvas doesnt exist"})
