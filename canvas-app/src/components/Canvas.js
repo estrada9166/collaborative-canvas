@@ -2,9 +2,6 @@ import React, { Component } from 'react';
 import { Col, Row, Button } from 'react-bootstrap';
 import '../styles/canvas.css';
 
- 
-
-
 class Canvas extends Component {
   constructor(props) {
     super(props);
