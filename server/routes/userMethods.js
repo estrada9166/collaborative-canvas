@@ -1,6 +1,6 @@
 let mongoose    = require('mongoose');
 let bcrypt      = require('bcrypt');
-var jwt     = require('jsonwebtoken');
+var jwt         = require('jsonwebtoken');
 
 
 let User    = require('../models/user');
@@ -29,6 +29,22 @@ const findUserByToken = ({token}, callback) => {
   })
 }
 
+const authenticateWithUsername = ({emailorusername}, callback) => {
+  User.findOne({
+    userName: emailorusername
+  }, (err, user) => {
+    callback(err, user)
+  })
+};
+
+const authenticateWithEmail = ({emailorusername}, callback) => {
+  User.findOne({
+    email: emailorusername
+  }, (err, user) => {
+    callback(err, user)
+  })
+};
+
 const createUser = ({ email, userName, password }, res) => {
   const saltRounds = 10;
   const salt = bcrypt.genSaltSync(saltRounds);
@@ -51,4 +67,25 @@ const createUser = ({ email, userName, password }, res) => {
   })
 }
 
-module.exports = { findUserByEmail, findUserByUsername, findUserByToken, createUser }
+const updateToken = (user) => {
+  var token = jwt.sign(user, 'superSecret', {
+    expiresIn: 1440
+  })
+
+  user['token'] = token;
+
+  return user.save((err, user) => {
+    if(err) res.send(err);
+    return user;
+  })
+}
+
+module.exports = { 
+  findUserByEmail, 
+  findUserByUsername, 
+  findUserByToken, 
+  authenticateWithUsername, 
+  authenticateWithEmail, 
+  createUser,
+  updateToken,
+}

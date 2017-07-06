@@ -15,23 +15,12 @@ var Canvas  = require('./models/canvas');
 
 const {
   postNewUser,
-  postImage,
+  getAllUserCanvas,
+  getCanvasById,
+  postNewCanvas,
+  patchImage,
+  authenticateUser
 } = require('./routes/serverMethods')
-
-const { 
-  findUserByEmail, 
-  findUserByUsername, 
-  findUserByToken,
-  createUser, 
-} = require('./routes/userMethods')
-
-const {
-  getAllCanvas,
-  findCanvasById,
-  findCanvasByUsers,
-  createCanvas,   
-  saveCanvasImage,
-} = require('./routes/canvasMethods')
 
 // =======================
 // configuration =========
@@ -63,159 +52,17 @@ app.use(morgan('dev'));
 // get an instance of the router for api routes
 var apiRoutes = express.Router();
 
-apiRoutes.post('/createUser', (req, res) => {
-  postNewUser(req, res)
-})
+apiRoutes.patch('/authenticate', authenticateUser)
 
-apiRoutes.post('/authenticate', function(req, res){
-  User.findOne({
-    userName: req.body.emailorusername
-  }, function(err, user){
-    if(err) throw err;
+apiRoutes.post('/user', postNewUser);
 
-    if(!user){
-      User.findOne({
-        email: req.body.emailorusername
-      }, function(err, email){     
-        if(!email){
-          res.json({ success: false, message: 'User or Email not found'});
-        } else if(email){
-          if(bcrypt.compareSync(req.body.password, email.password)){
-            var token = jwt.sign(email, app.get('superSecret'), {
-              expiresIn: 1440
-            })
-            email.token = token;
-            email.save(function(err){
-              if(err) throw err;
-            })
-            var newCanvas = new Canvas();
-            newCanvas.name = "My new Canvas";
-            newCanvas.users.push(email._id);
+apiRoutes.get('/canvas', getAllUserCanvas);
 
-            newCanvas.save(function(err){
-              if(err) throw err;
+apiRoutes.get('/canvas/:id', getCanvasById);
 
-              res.json({
-                success: true,
-                user: email,
-                canvasId: newCanvas._id
-              })
-            })
-          } else{
-            res.json({ success: false, message: 'wrong password'});
-          }
-        }
-      })
-    } else if(user){
-      if(bcrypt.compareSync(req.body.password, user.password)){
-        var token = jwt.sign(user, app.get('superSecret'), {
-          expiresIn: 1440
-        })
-        user.token = token;
-        user.save(function(err){
-          if(err) throw err;
-        })
-        var newCanvas = new Canvas();
-        newCanvas.name = "My new Canvas";
-        newCanvas.users.push(user._id);
+apiRoutes.post('/canvas', postNewCanvas);
 
-        newCanvas.save(function(err){
-          if(err) throw err;
-
-          res.json({
-            success: true,
-            user: user,
-            canvasId: newCanvas._id
-          })
-        })
-
-      } else{
-        res.json({ success: false, message: 'wrong password'});
-      }
-    }
-  })
-})
-
-apiRoutes.post('/save-image', function(req, res){
-  postImage(req, res);
-})
-
-apiRoutes.get('/canvas', function(req, res){
-  getAllCanvas((err, canvas) => {
-    if (err) throw err;
-
-    res.json(canvas)
-  })
-})
-
-apiRoutes.get('/canvas/:id', function(req, res){
-  findCanvasById(req.params, (err, canvas) => {
-    if(err) throw err;
-
-    if(!!canvas) {
-      res.json({ 
-        canvas,
-        success: true, 
-      })
-    } else {
-      res.json({ 
-        success: false, 
-        message: "The canvas doesnt exist",
-      })
-    }
-  })
-})
-
-apiRoutes.get('/user-canvas/:token', function(req, res){
-  findUserByToken(req.params, (err, user) => {
-    if(err) throw err;
-
-    if(user) {
-      findCanvasByUsers(user, 10, (err, canvas) => {
-        if(err) throw err;
-
-        if(canvas) {
-          res.json({
-            canvas,
-            success: true,
-          })
-        } else {
-          res.json({
-            success: false,
-            message: 'The user doesnt have canvas',
-          })
-        }
-      })
-    } else {
-      res.json({
-        success: false,
-        message: 'The user doesnt exist'
-      })
-    }
-  })
-})
-
-apiRoutes.post('/new-canvas', function(req, res){
-  findUserByToken(req.body, (err, user) => {
-    if(err) throw err;
-
-    if(user) {
-      createCanvas(user._id)
-      .then((canvas) => {
-        res.json({
-          success: true,
-          canvasId: canvas._id,
-        })
-      })
-    } else {
-      res.json({
-        success: false,
-        message: 'The user doesnt exist'
-      })
-    }
-  }) 
-})
-
+apiRoutes.patch('/canvas/:id', patchImage);
 
 // apiRoutes.use(function(req, res, next){
 //   var token = req.body.token || req.query.token || req.headers['x-access-token'];
@@ -236,7 +83,6 @@ apiRoutes.post('/new-canvas', function(req, res){
 //     })
 //   }
 // })
-
 
 apiRoutes.get('/', function(req, res){
     res.json({ message: 'welcome to our api!'});

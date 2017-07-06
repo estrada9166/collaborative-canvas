@@ -2,8 +2,10 @@ let mongoose    = require('mongoose');
 
 let Canvas  = require('../models/canvas');
 
-const getAllCanvas = (callback) => {
-  Canvas.find({}, (err, canvas) => {
+const getAllCanvas = ({id}, callback) => {
+  Canvas.find({
+    users: id
+  }, (err, canvas) => {
     callback(err, canvas);
   })
 };

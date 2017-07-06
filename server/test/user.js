@@ -24,7 +24,7 @@ describe('User', () => {
         password: 'test',
       }
       chai.request(server)
-        .post('/api/createUser')
+        .post('/api/user')
         .send(user)
         .end((err, res) => {
           res.should.have.status(200);
@@ -34,23 +34,38 @@ describe('User', () => {
           res.body.errors.userName.should.have.property('kind').eql('required');
           done()
         })
-    })
+    });
 
-    describe('/POST new user', () => {
-      it('it should create a new user', (done) => {
-        let user = {
-          email: 'test@test.com',
-          userName: 'test',
-          password: 'test',
-        }
+    it('it should create a new user', (done) => {
+      let user = {
+        email: 'test@test.com',
+        userName: 'test',
+        password: 'test',
+      }
+      chai.request(server)
+        .post('/api/user')
+        .send(user)
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.be.a('object');
+          done()
+        })
+    })
+  })
+
+  describe('/POST auth a user', () => {
+    it('it should auth a user', (done) => {
+      let user = new User({email: 'e@a.com', userName: 'e', password: 'test', token: 123456789})
+      let logData = { emailorusername: 'e', password: 'test'}
+      user.save((err, user) => {
         chai.request(server)
-          .post('/api/createUser')
-          .send(user)
+          .patch('/api/authenticate')
+          .send(logData)
           .end((err, res) => {
-            res.should.have.status(200);
-            res.body.should.be.a('object');
+            res.should.have.status(200)
             done()
           })
+
       })
     })
   })

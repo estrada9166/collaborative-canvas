@@ -20,16 +20,28 @@ describe('Canvas', () => {
 
   describe('/GET canvas', () => {
     it('it should GET all the canvas', (done) => {
-      chai.request(server)
-        .get('/api/canvas')
-        .end((err, res) => {
-          res.should.have.status(200);
-          res.body.should.be.a('array');
-          done();
+      let user = new User({email: 'b@a.com', userName: 'b', password: 'test', token: 12345})
+      user.save((err, user) => {
+        let canvas = new Canvas();
+        canvas.name = "My new Canvas";
+        canvas.users.push(user.id);
+        canvas.save((err, canvas) => {
+          chai.request(server)
+            .get(`/api/canvas/?token=${user.token}`)
+            .end((err, res) => {
+              res.should.have.status(200);
+              res.body.should.be.a('object');
+              res.body.should.have.property('success');
+              res.body.should.have.property('success').eql(true);
+              res.body.should.have.property('canvas');
+              res.body.canvas.should.be.a('array'); 
+              done();
+            })
         })
+      })
     });
 
-    describe('/GET canvas by id', () => {
+    describe('/GET/:id canvas', () => {
       it('it should return a canvas with a given id', (done) => {
         let canvas = new Canvas();
         canvas.name = "My new Canvas";
@@ -51,42 +63,52 @@ describe('Canvas', () => {
       })
     });
 
-    describe('/GET canvas by users', () => {
-      it('it should get all the canvas by user', (done) => {
-        let user = new User({email: 'a@a.com', userName: 'a', password: 'test', token: 1234})
+    describe('/POST new canvas', () => {
+      it('it should create a new canvas', (done) => {
+        let user = new User({email: 'c@a.com', userName: 'c', password: 'test', token: 123456})
         user.save((err, user) => {
-          let canvas = new Canvas();
-          canvas.name = "My new Canvas";
-          canvas.users.push(user.id);
-          canvas.save((err, canvas) => {
-            chai.request(server)
-            .get(`/api/user-canvas/${user.token}`)
-            .end((err, res) => {
-              res.should.have.status(200);
-              res.should.be.a('object');
-              res.body.should.have.property('success');
-              res.body.should.have.property('success').eql(true);
-              res.body.should.have.property('canvas');
-              res.body.canvas.should.be.a('array');                                          
-              done()
-            })
+          chai.request(server)
+          .post('/api/canvas')
+          .send(user)
+          .end((err, res) => {
+            res.should.have.status(200)
+            res.body.should.be.a('object');
+            res.body.should.have.property('success');
+            res.body.should.have.property('success').eql(true);
+            res.body.should.have.property('canvasId');
+            done()
           })
+        })
+      });
+
+      it('it should not create a new canvas if the user is not created', (done) => {
+        let user = new User({email: 'd@a.com', userName: 'd', password: 'test', token: 1234567})        
+        chai.request(server)
+        .post('/api/canvas')
+        .send(user)
+        .end((err, res) => {
+          res.should.have.status(200)
+          res.body.should.be.a('object');
+          res.body.should.have.property('success');
+          res.body.should.have.property('success').eql(false);            
+          res.body.should.have.property('message');
+          res.body.should.have.property('message').eql('The user doesnt exist');
+          done()
         })
       })
     })
 
-    describe('/POST save image on canvas', () => {
+    describe('/PATCH/:id save image', () => {
       it('it should save a image on the canvas', (done) => {
         let canvas = new Canvas();
         canvas.name = "My new Canvas";
         canvas.users.push(123);
         canvas.save((err, canvas) => {
           let image = {
-            image: 'https://www.google.com.co/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
-            id: canvas.id
+            image: 'https://www.google.com.co/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png'
           };
           chai.request(server)
-          .post('/api/save-image')
+          .patch(`/api/canvas/${canvas.id}`)
           .send(image)
           .end((err, res) => {
             res.should.have.status(200);
