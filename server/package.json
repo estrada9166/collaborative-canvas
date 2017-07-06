@@ -2,13 +2,24 @@
   "name": "canvas-server",
   "version": "0.1.0",
   "description": "my first canvas server",
+  "main": "server.js",
   "dependencies": {
     "bcrypt": "^1.0.2",
     "body-parser": "^1.17.2",
+    "config": "^1.20.1",
     "express": "^4.15.2",
     "jsonwebtoken": "^7.4.1",
     "mongoose": "^4.10.7",
     "morgan": "^1.8.2",
     "socket.io": "^2.0.3"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-http": "^2.0.1",
+    "mocha": "^2.4.5"
+  },
+  "scripts": {
+    "start": "NODE_ENV=dev && node server.js",
+    "test": "mocha --timeout 20000"
   }
 }

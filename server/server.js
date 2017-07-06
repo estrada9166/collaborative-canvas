@@ -13,14 +13,32 @@ var config  = require('./config');
 var User    = require('./models/user');
 var Canvas  = require('./models/canvas');
 
+const {
+  postNewUser,
+  postImage,
+} = require('./routes/serverMethods')
+
+const { 
+  findUserByEmail, 
+  findUserByUsername, 
+  findUserByToken,
+  createUser, 
+} = require('./routes/userMethods')
+
+const {
+  getAllCanvas,
+  findCanvasById,
+  findCanvasByUsers,
+  createCanvas,   
+  saveCanvasImage,
+} = require('./routes/canvasMethods')
+
 // =======================
 // configuration =========
 // =======================
 
 var port = process.env.PORT || 8080;
 mongoose.connect(config.database);
-app.set('superSecret', config.secret);
-
 
 // use body parser so we can get info from POST and/or URL parameters
 app.use(bodyParser.urlencoded({ extended: false, limit: '50mb'} ));
@@ -45,59 +63,8 @@ app.use(morgan('dev'));
 // get an instance of the router for api routes
 var apiRoutes = express.Router();
 
-apiRoutes.post('/createUser', function(req, res){
-  User.findOne({
-    email: req.body.email
-  }, function(err, email){
-    if(err) throw err;
-
-    if(!email){
-      User.findOne({
-        userName: req.body.userName
-      }, function(err, userName){
-        if(err) throw err;
-
-        if(!userName){
-          var saltRounds = 10;
-          var password = req.body.password;
-          var salt = bcrypt.genSaltSync(saltRounds);
-          var hash = bcrypt.hashSync(password, salt);
-
-          var newUser = new User()
-          newUser.email = req.body.email;
-          newUser.userName = req.body.userName;
-          newUser.password = hash;
-
-          var token = jwt.sign(newUser, app.get('superSecret'), {
-            expiresIn: 1440
-          })
-          
-          newUser.token = token;
-
-          newUser.save(function(err){
-            if(err) throw err;
-          })
-          var newCanvas = new Canvas();
-          newCanvas.name = "My new Canvas";
-          newCanvas.users.push(newUser._id);
-
-          newCanvas.save(function(err){
-            if(err) throw err;
-
-            res.json({
-              success: true,
-              user: newUser,
-              canvasId: newCanvas._id
-            })
-          })
-        } else{
-          res.json({ success: false, message: "The username is already in use"})
-        }
-      })
-    } else{
-      res.json({ success: false, message: "The email is already in use"})
-    }
-  })
+apiRoutes.post('/createUser', (req, res) => {
+  postNewUser(req, res)
 })
 
 apiRoutes.post('/authenticate', function(req, res){
@@ -170,89 +137,56 @@ apiRoutes.post('/authenticate', function(req, res){
 })
 
 apiRoutes.post('/save-image', function(req, res){
-  Canvas.findOne({
-    _id: req.body.id
-  }, function(err, canvas){
-    if(err) throw err;
+  postImage(req, res);
+})
 
-    if(canvas){
-      canvas.image = req.body.image;
-      canvas.save(function(err){
-        if(err) throw err;
-        res.json({ success: true, message: "Image saved" })
-      })
-    } else{
-      res.json({ success: false, message: "The canvas doesnt exist"})
-    }
+apiRoutes.get('/canvas', function(req, res){
+  getAllCanvas((err, canvas) => {
+    if (err) throw err;
+
+    res.json(canvas)
   })
 })
 
-apiRoutes.post('/new-canvas', function(req, res){
-  User.findOne({
-    token: req.body.token
-  }, function(err, user){
+apiRoutes.get('/canvas/:id', function(req, res){
+  findCanvasById(req.params, (err, canvas) => {
     if(err) throw err;
 
-    if(user){
-      var newCanvas = new Canvas();
-      newCanvas.name = "My new Canvas";
-      newCanvas.users.push(user._id);
-      newCanvas.save(function(err){
-        if(err) throw err;
-
-        res.json({
-          success: true,
-          canvasId: newCanvas._id
-        })
+    if(!!canvas) {
+      res.json({ 
+        canvas,
+        success: true, 
       })
     } else {
-      res.json({
-          success: false,
-          message: 'The user doesnt exist'
-        })
-    }
-  }) 
-})
-
-apiRoutes.get('/canvas/:id', function(req, res){
-  Canvas.findOne({
-    _id: req.params.id
-  }, function(err, canvas){
-    if(err) throw err;
-
-    if(!canvas){
-      res.json({ success: true, canvas: canvas})
-    } else{
-      res.json({ success: false, message: "The canvas doesnt exist"})
+      res.json({ 
+        success: false, 
+        message: "The canvas doesnt exist",
+      })
     }
   })
 })
 
 apiRoutes.get('/user-canvas/:token', function(req, res){
-  User.findOne({
-    token: req.params.token
-  }, function(err, user){
+  findUserByToken(req.params, (err, user) => {
     if(err) throw err;
 
-    if(user){
-      Canvas.find({
-        users: user._id
-      }).limit(10).exec( function(err, canvas){
+    if(user) {
+      findCanvasByUsers(user, 10, (err, canvas) => {
         if(err) throw err;
 
-        if(canvas){
+        if(canvas) {
           res.json({
+            canvas,
             success: true,
-            canvas: canvas
           })
-        } else{
+        } else {
           res.json({
             success: false,
-            message: 'The user doesnt have canvas'
+            message: 'The user doesnt have canvas',
           })
         }
       })
-    } else{
+    } else {
       res.json({
         success: false,
         message: 'The user doesnt exist'
@@ -261,18 +195,25 @@ apiRoutes.get('/user-canvas/:token', function(req, res){
   })
 })
 
-apiRoutes.get('/find/:id', function(req, res){
-  User.findOne({
-    token: req.params.id
-  }, function(err, canvas){
+apiRoutes.post('/new-canvas', function(req, res){
+  findUserByToken(req.body, (err, user) => {
     if(err) throw err;
-    if(canvas){
+
+    if(user) {
+      createCanvas(user._id)
+      .then((canvas) => {
+        res.json({
+          success: true,
+          canvasId: canvas._id,
+        })
+      })
+    } else {
       res.json({
-        success: true,
-        canvas: canvas
+        success: false,
+        message: 'The user doesnt exist'
       })
     }
-  })
+  }) 
 })
 
 
@@ -298,13 +239,7 @@ apiRoutes.get('/find/:id', function(req, res){
 
 
 apiRoutes.get('/', function(req, res){
-    res.json({ message: 'welcome to our api aa!' + port});
-})
-
-apiRoutes.get('/users', function(req, res){
-  User.find({}, function(err, users){
-    res.json(users);
-  })
+    res.json({ message: 'welcome to our api!'});
 })
 
 app.use('/api', apiRoutes);
@@ -315,6 +250,8 @@ io.on('connection', function(socket){
   })
 });
 
-http.listen(port, function() {
-  console.log('listening to port 8080')
+app.listen(port, function() {
+  console.log(`listening to port ${port}`)
 });
+
+module.exports = app;
