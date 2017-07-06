@@ -3,9 +3,7 @@ let bcrypt      = require('bcrypt');
 var jwt     = require('jsonwebtoken');
 
 
-//let User    = require('../models/user');
-// user collection for tests
-let User  = require('../models/User_test');
+let User    = require('../models/user');
 
 const findUserByEmail = ({email}, callback) => {
   User.findOne({

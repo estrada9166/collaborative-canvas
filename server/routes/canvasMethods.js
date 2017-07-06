@@ -1,7 +1,6 @@
 let mongoose    = require('mongoose');
 
-//let Canvas  = require('../models/canvas');
-let Canvas  = require('../models/canvas_test');
+let Canvas  = require('../models/canvas');
 
 const getAllCanvas = (callback) => {
   Canvas.find({}, (err, canvas) => {

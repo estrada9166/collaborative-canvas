@@ -38,7 +38,7 @@ const {
 // =======================
 
 var port = process.env.PORT || 8080;
-mongoose.connect(config.database);
+mongoose.connect(config.testDatabase);
 
 // use body parser so we can get info from POST and/or URL parameters
 app.use(bodyParser.urlencoded({ extended: false, limit: '50mb'} ));
