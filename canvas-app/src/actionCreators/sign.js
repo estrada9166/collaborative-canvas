@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const createAccount = userInfo => {
   return dispatch => {
-    return axios.post("http://localhost:8080/api/createUser", {
+    return axios.post("http://localhost:8080/api/user", {
       email: userInfo.email,
       userName: userInfo.userName,
       password: userInfo.password
@@ -18,7 +18,7 @@ const createAccount = userInfo => {
 
 const signIn = userInfo => {
   return dispatch => {
-    return axios.post("http://localhost:8080/api/authenticate", {
+    return axios.patch("http://localhost:8080/api/authenticate", {
       emailorusername: userInfo.emailOrUsername,
       password: userInfo.password
     })

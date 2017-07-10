@@ -1,7 +1,7 @@
 var express     = require('express')
 var app         = express();
-var http        = require('http').Server(app);
-var io          = require('socket.io')(http);
+var server        = require('http').createServer(app);
+var io          = require('socket.io').listen(server);
 var bodyParser  = require('body-parser');
 var morgan      = require('morgan');
 var mongoose    = require('mongoose');
@@ -27,7 +27,7 @@ const {
 // =======================
 
 var port = process.env.PORT || 8080;
-mongoose.connect(config.testDatabase);
+mongoose.connect(config.database);
 
 // use body parser so we can get info from POST and/or URL parameters
 app.use(bodyParser.urlencoded({ extended: false, limit: '50mb'} ));
@@ -90,13 +90,13 @@ apiRoutes.get('/', function(req, res){
 
 app.use('/api', apiRoutes);
 
-io.on('connection', function(socket){
-  socket.on('drawing', function(coordinates){
+io.on('connection', (socket) => {
+  socket.on('drawing', (coordinates) => {
     io.emit('drawing', coordinates)
   })
 });
 
-app.listen(port, function() {
+server.listen(port, function() {
   console.log(`listening to port ${port}`)
 });
 

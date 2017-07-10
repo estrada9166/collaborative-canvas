@@ -2,9 +2,8 @@ import axios from 'axios';
 
 const saveCanvasAsImg = (image, id)  => {
   return dispatch => {
-    return axios.post("http://localhost:8080/api/save-image", {
-      image,
-      id
+    return axios.patch(`http://localhost:8080/api/canvas/${id}`, {
+      image
     })
     .then((response)=>{
       console.log(response)
@@ -29,7 +28,7 @@ const getCanvasInfo = id => {
 
 const createNewCanvas = token => {
   return dispatch => {
-    return axios.post("http://localhost:8080/api/new-canvas", {
+    return axios.post("http://localhost:8080/api/canvas", {
       token
     })
     .then((response)=>{
@@ -43,7 +42,7 @@ const createNewCanvas = token => {
 
 const getAllCanvasByUser = token => {
   return dispatch =>{
-    return axios.get(`http://localhost:8080/api/user-canvas/${token}`)
+    return axios.get(`http://localhost:8080/api/canvas/?token=${token}`)
     .then((response)=>{
        dispatch({
         type: "LOAD_USER_CANVAS",
